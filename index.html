@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Runner Parkour - Vector Style</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+    <canvas id="gameCanvas"></canvas>
+    
+    <!-- Auth Screens -->
+    <div id="authScreen" class="screen active">
+        <div class="auth-container">
+            <h1 class="game-title">🏃 RUNNER PARKOUR</h1>
+            <p class="subtitle">Parkour Vector Style</p>
+            
+            <div id="loginForm">
+                <h2>Connexion</h2>
+                <input type="email" id="loginEmail" placeholder="Email" required>
+                <input type="password" id="loginPassword" placeholder="Mot de passe" required>
+                <button id="btnLogin" class="btn-primary">Se connecter</button>
+                <p class="auth-switch">Pas de compte ? <a href="#" id="showRegister">S'inscrire</a></p>
+            </div>
+            
+            <div id="registerForm" style="display:none;">
+                <h2>Inscription</h2>
+                <input type="email" id="registerEmail" placeholder="Email" required>
+                <input type="password" id="registerPassword" placeholder="Mot de passe (min 6 caractères)" required>
+                <button id="btnRegister" class="btn-primary">S'inscrire</button>
+                <p class="auth-switch">Déjà un compte ? <a href="#" id="showLogin">Se connecter</a></p>
+            </div>
+            
+            <p id="authError" class="error-msg"></p>
+        </div>
+    </div>
+    
+    <!-- Main Menu -->
+    <div id="mainMenu" class="screen">
+        <div class="menu-container">
+            <h1 class="game-title">🏃 RUNNER PARKOUR</h1>
+            <div class="player-info">
+                <span id="playerEmail"></span>
+                <span id="coinDisplay">💰 0</span>
+            </div>
+            
+            <div class="menu-buttons">
+                <button id="btnPlay" class="btn-primary btn-large">▶ JOUER</button>
+                <button id="btnSkins" class="btn-secondary">🎨 Boutique de Skins</button>
+                <button id="btnLeaderboard" class="btn-secondary">🏆 Classement</button>
+                <button id="btnLogout" class="btn-secondary">🚪 Déconnexion</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Level Select -->
+    <div id="levelSelect" class="screen">
+        <div class="menu-container">
+            <h2>Choisir un niveau</h2>
+            <div class="levels-grid">
+                <div class="level-card" data-level="city">
+                    <div class="level-preview city-preview"></div>
+                    <h3>🏙️ La Ville</h3>
+                    <p>Toits urbains et néons</p>
+                </div>
+                <div class="level-card" data-level="forest">
+                    <div class="level-preview forest-preview"></div>
+                    <h3>🌲 La Forêt</h3>
+                    <p>Canopée mystérieuse</p>
+                </div>
+                <div class="level-card" data-level="ruins">
+                    <div class="level-preview ruins-preview"></div>
+                    <h3>🏰 Les Ruines</h3>
+                    <p>Vestiges du passé</p>
+                </div>
+            </div>
+            <button id="btnBackFromLevels" class="btn-secondary">← Retour</button>
+        </div>
+    </div>
+    
+    <!-- Skin Shop -->
+    <div id="skinShop" class="screen">
+        <div class="menu-container">
+            <h2>🎨 Boutique de Skins</h2>
+            <div class="coin-display-shop">💰 <span id="shopCoins">0</span></div>
+            <div id="skinsGrid" class="skins-grid"></div>
+            <button id="btnBackFromShop" class="btn-secondary">← Retour</button>
+        </div>
+    </div>
+    
+    <!-- Leaderboard -->
+    <div id="leaderboardScreen" class="screen">
+        <div class="menu-container">
+            <h2>🏆 Classement</h2>
+            <div id="leaderboardList" class="leaderboard-list"></div>
+            <button id="btnBackFromLeaderboard" class="btn-secondary">← Retour</button>
+        </div>
+    </div>
+    
+    <!-- Game HUD -->
+    <div id="gameHUD" class="hud" style="display:none;">
+        <div class="hud-top">
+            <span id="hudScore">0m</span>
+            <span id="hudCoins">💰 0</span>
+            <span id="hudSpeed">Speed: 1.0x</span>
+        </div>
+    </div>
+    
+    <!-- Game Over -->
+    <div id="gameOver" class="screen" style="display:none;">
+        <div class="menu-container gameover-container">
+            <h2>💀 GAME OVER</h2>
+            <div class="stats">
+                <p>Distance: <span id="finalDistance">0</span>m</p>
+                <p>Pièces gagnées: <span id="finalCoins">0</span></p>
+                <p>Total pièces: <span id="totalCoins">0</span></p>
+            </div>
+            <button id="btnRestart" class="btn-primary btn-large">🔄 Rejouer</button>
+            <button id="btnMenuFromGameOver" class="btn-secondary">🏠 Menu Principal</button>
+        </div>
+    </div>
+    
+    <!-- Controls Hint -->
+    <div id="controlsHint" class="controls-hint" style="display:none;">
+        <div class="control-key"><span>↑</span> ou <span>Espace</span> = Sauter</div>
+        <div class="control-key"><span>↓</span> = Glisser</div>
+        <div class="control-key"><span>→</span> = Sprint (temporaire)</div>
+    </div>
+
+    <script src="config.js"></script>
+    <script src="audio.js"></script>
+    <script src="stickman.js"></script>
+    <script src="game.js"></script>
+    <script src="auth.js"></script>
+    <script src="main.js"></script>
+</body>
+</html>
