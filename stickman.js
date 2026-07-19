@@ -307,4 +307,183 @@ class Stickman {
         
         ctx.beginPath();
         ctx.moveTo(cx, cy);
-        ctx.lineTo(cx - 
+        ctx.lineTo(cx - 10 * tuck, cy - 15 * tuck);
+        ctx.lineTo(cx - 5 * tuck, cy + 5);
+        ctx.stroke();
+        
+        ctx.beginPath();
+        ctx.moveTo(cx, cy);
+        ctx.lineTo(cx + 10 * tuck, cy - 15 * tuck);
+        ctx.lineTo(cx + 5 * tuck, cy + 5);
+        ctx.stroke();
+    }
+
+    drawSliding(ctx, cx, cy) {
+        const progress = this.stateTimer / GAME_CONFIG.SLIDE_DURATION;
+        
+        ctx.beginPath();
+        ctx.arc(cx + 5, cy - 15, this.headRadius, 0, Math.PI * 2);
+        ctx.fill();
+        
+        ctx.beginPath();
+        ctx.moveTo(cx + 5, cy - 15);
+        ctx.lineTo(cx - 25, cy - 5);
+        ctx.stroke();
+        
+        ctx.beginPath();
+        ctx.moveTo(cx - 5, cy - 12);
+        ctx.lineTo(cx - 35, cy - 8);
+        ctx.stroke();
+        
+        ctx.beginPath();
+        ctx.moveTo(cx - 5, cy - 8);
+        ctx.lineTo(cx - 30, cy - 2);
+        ctx.stroke();
+        
+        ctx.beginPath();
+        ctx.moveTo(cx - 25, cy - 5);
+        ctx.lineTo(cx - 40, cy - 2);
+        ctx.lineTo(cx - 45, cy + 3);
+        ctx.stroke();
+        
+        ctx.beginPath();
+        ctx.moveTo(cx - 25, cy - 5);
+        ctx.lineTo(cx - 38, cy + 2);
+        ctx.lineTo(cx - 42, cy + 6);
+        ctx.stroke();
+    }
+
+    drawVaulting(ctx, cx, cy) {
+        const progress = this.stateTimer / GAME_CONFIG.VAULT_DURATION;
+        const vaultHeight = Math.sin(progress * Math.PI) * 40;
+        const handX = cx + 15;
+        const handY = cy - 20 + vaultHeight * 0.3;
+        
+        ctx.beginPath();
+        ctx.arc(cx, cy - this.torsoLength - this.headRadius - 2 - vaultHeight * 0.5, this.headRadius, 0, Math.PI * 2);
+        ctx.fill();
+        
+        ctx.beginPath();
+        ctx.moveTo(cx, cy - this.torsoLength - vaultHeight * 0.5);
+        ctx.lineTo(cx + 10, cy - vaultHeight * 0.2);
+        ctx.stroke();
+        
+        ctx.beginPath();
+        ctx.moveTo(cx + 3, cy - this.torsoLength + 5 - vaultHeight * 0.5);
+        ctx.lineTo(handX, handY);
+        ctx.stroke();
+        
+        ctx.beginPath();
+        ctx.moveTo(cx + 3, cy - this.torsoLength + 5 - vaultHeight * 0.5);
+        ctx.lineTo(handX - 5, handY + 5);
+        ctx.stroke();
+        
+        const legSwing = Math.sin(progress * Math.PI) * 1.2;
+        
+        ctx.beginPath();
+        ctx.moveTo(cx + 10, cy - vaultHeight * 0.2);
+        ctx.lineTo(cx + 10 + Math.cos(legSwing) * 20, cy - 10 + Math.sin(legSwing) * 15);
+        ctx.lineTo(cx + 15 + Math.cos(legSwing) * 30, cy + 5);
+        ctx.stroke();
+        
+        ctx.beginPath();
+        ctx.moveTo(cx + 10, cy - vaultHeight * 0.2);
+        ctx.lineTo(cx + 5 + Math.cos(legSwing - 0.5) * 15, cy - 5 + Math.sin(legSwing - 0.5) * 10);
+        ctx.lineTo(cx + 10 + Math.cos(legSwing - 0.5) * 25, cy + 8);
+        ctx.stroke();
+    }
+
+    drawRolling(ctx, cx, cy) {
+        const progress = this.stateTimer / GAME_CONFIG.ROLL_DURATION;
+        const rollAngle = progress * Math.PI * 2;
+        
+        ctx.save();
+        ctx.translate(cx - 10, cy - 10);
+        ctx.rotate(rollAngle);
+        
+        ctx.beginPath();
+        ctx.arc(0, 0, 18, 0, Math.PI * 2);
+        ctx.stroke();
+        
+        ctx.beginPath();
+        ctx.arc(0, -20, this.headRadius, 0, Math.PI * 2);
+        ctx.fill();
+        
+        ctx.beginPath();
+        ctx.moveTo(-5, -5);
+        ctx.lineTo(-15, -5);
+        ctx.lineTo(-15, 5);
+        ctx.stroke();
+        
+        ctx.beginPath();
+        ctx.moveTo(5, -5);
+        ctx.lineTo(15, -5);
+        ctx.lineTo(15, 5);
+        ctx.stroke();
+        
+        ctx.restore();
+    }
+
+    drawFalling(ctx, cx, cy) {
+        ctx.beginPath();
+        ctx.arc(cx, cy - this.torsoLength - this.headRadius - 2, this.headRadius, 0, Math.PI * 2);
+        ctx.fill();
+        
+        ctx.beginPath();
+        ctx.moveTo(cx, cy - this.torsoLength);
+        ctx.lineTo(cx, cy);
+        ctx.stroke();
+        
+        ctx.beginPath();
+        ctx.moveTo(cx, cy - this.torsoLength + 5);
+        ctx.lineTo(cx - 15, cy - 10);
+        ctx.stroke();
+        
+        ctx.beginPath();
+        ctx.moveTo(cx, cy - this.torsoLength + 5);
+        ctx.lineTo(cx + 15, cy - 10);
+        ctx.stroke();
+        
+        ctx.beginPath();
+        ctx.moveTo(cx, cy);
+        ctx.lineTo(cx - 10, cy + 15);
+        ctx.stroke();
+        
+        ctx.beginPath();
+        ctx.moveTo(cx, cy);
+        ctx.lineTo(cx + 10, cy + 15);
+        ctx.stroke();
+    }
+
+    drawTrail(ctx) {
+        if (this.trail.length < 2) return;
+        
+        for (let i = 0; i < this.trail.length - 1; i++) {
+            const alpha = (i / this.trail.length) * 0.3;
+            const point = this.trail[i];
+            
+            ctx.save();
+            ctx.globalAlpha = alpha;
+            ctx.strokeStyle = this.color === 'rainbow' ? `hsl(${(Date.now() / 10 - i * 20) % 360}, 100%, 50%)` : this.color;
+            ctx.lineWidth = 2;
+            
+            ctx.beginPath();
+            ctx.arc(point.x, point.y - 35, 3, 0, Math.PI * 2);
+            ctx.fill();
+            
+            ctx.restore();
+        }
+    }
+
+    drawParticles(ctx) {
+        this.particles.forEach(p => {
+            ctx.save();
+            ctx.globalAlpha = p.life;
+            ctx.fillStyle = this.color === 'rainbow' ? `hsl(${(Date.now() / 5) % 360}, 100%, 60%)` : this.color;
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, p.size * p.life, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.restore();
+        });
+    }
+}
