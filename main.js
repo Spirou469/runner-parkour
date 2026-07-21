@@ -2,7 +2,6 @@
 let game = null;
 let authManager = null;
 
-// DOM Elements
 const screens = {
     auth: document.getElementById('authScreen'),
     menu: document.getElementById('mainMenu'),
@@ -11,7 +10,6 @@ const screens = {
     leaderboard: document.getElementById('leaderboardScreen'),
 };
 
-// Initialize
 async function init() {
     authManager = new AuthManager();
     await authManager.init();
@@ -52,7 +50,6 @@ function updateMenuUI() {
 }
 
 function setupEventListeners() {
-    // Auth switching
     document.getElementById('showRegister').addEventListener('click', (e) => {
         e.preventDefault();
         document.getElementById('loginForm').style.display = 'none';
@@ -67,7 +64,6 @@ function setupEventListeners() {
         document.getElementById('authError').textContent = '';
     });
     
-    // Login
     document.getElementById('btnLogin').addEventListener('click', async () => {
         const email = document.getElementById('loginEmail').value;
         const password = document.getElementById('loginPassword').value;
@@ -86,7 +82,6 @@ function setupEventListeners() {
         }
     });
     
-    // Register
     document.getElementById('btnRegister').addEventListener('click', async () => {
         const email = document.getElementById('registerEmail').value;
         const password = document.getElementById('registerPassword').value;
@@ -116,7 +111,6 @@ function setupEventListeners() {
         }
     });
     
-    // Menu buttons
     document.getElementById('btnPlay').addEventListener('click', () => {
         showScreen('levels');
     });
@@ -136,7 +130,6 @@ function setupEventListeners() {
         showScreen('auth');
     });
     
-    // Level select
     document.querySelectorAll('.level-card').forEach(card => {
         card.addEventListener('click', () => {
             const level = card.dataset.level;
@@ -149,18 +142,15 @@ function setupEventListeners() {
         showScreen('menu');
     });
     
-    // Shop back
     document.getElementById('btnBackFromShop').addEventListener('click', () => {
         showScreen('menu');
         updateMenuUI();
     });
     
-    // Leaderboard back
     document.getElementById('btnBackFromLeaderboard').addEventListener('click', () => {
         showScreen('menu');
     });
     
-    // Game over buttons
     document.getElementById('btnRestart').addEventListener('click', () => {
         game.start(game.level, authManager.equippedSkin);
         showScreen('');
@@ -264,10 +254,9 @@ async function renderLeaderboard() {
     }
 }
 
-// Override game over to save data
 const originalGameOver = Game.prototype.gameOver;
-Game.prototype.gameOver = function() {
-    const result = originalGameOver.call(this);
+Game.prototype.gameOver = function(reason) {
+    const result = originalGameOver.call(this, reason);
     
     if (authManager.isAuthenticated() && result.coins > 0) {
         authManager.updateCoins(result.coins);
@@ -282,5 +271,4 @@ Game.prototype.gameOver = function() {
     return result;
 };
 
-// Start the app
 window.addEventListener('DOMContentLoaded', init);
