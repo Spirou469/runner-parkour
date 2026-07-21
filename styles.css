@@ -2,6 +2,8 @@
     margin: 0;
     padding: 0;
     box-sizing: border-box;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
 }
 
 body {
@@ -11,6 +13,8 @@ body {
     color: #fff;
     width: 100vw;
     height: 100vh;
+    user-select: none;
+    -webkit-user-select: none;
 }
 
 #gameCanvas {
@@ -33,7 +37,7 @@ body {
     justify-content: center;
     align-items: center;
     z-index: 10;
-    background: rgba(10, 10, 15, 0.92);
+    background: rgba(10, 10, 15, 0.95);
     backdrop-filter: blur(8px);
 }
 
@@ -227,11 +231,11 @@ body {
     height: 120px;
     border-radius: 12px;
     margin-bottom: 15px;
-    position: relative;
 }
 
 .city-preview {
     background: linear-gradient(180deg, #1a0a2e 0%, #2d1b4e 50%, #0a0a1a 100%);
+    position: relative;
 }
 
 .city-preview::after {
@@ -412,6 +416,26 @@ body {
     color: #ff66aa;
 }
 
+.hud-danger {
+    position: fixed;
+    top: 60px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(255, 0, 0, 0.8);
+    color: #fff;
+    padding: 10px 30px;
+    border-radius: 30px;
+    font-weight: 700;
+    font-size: 1.1em;
+    animation: pulse-danger 0.5s ease-in-out infinite alternate;
+    z-index: 6;
+}
+
+@keyframes pulse-danger {
+    from { opacity: 0.7; transform: translateX(-50%) scale(1); }
+    to { opacity: 1; transform: translateX(-50%) scale(1.05); }
+}
+
 /* Game Over */
 .gameover-container {
     background: linear-gradient(135deg, #1a0a0a, #2a0a0a);
@@ -473,6 +497,51 @@ body {
     border: 1px solid rgba(255,255,255,0.2);
 }
 
+/* Mobile Touch Controls */
+.mobile-controls {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 35vh;
+    z-index: 8;
+    display: flex;
+    pointer-events: none;
+}
+
+.touch-zone {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    pointer-events: auto;
+    cursor: pointer;
+    transition: all 0.1s;
+    opacity: 0.3;
+}
+
+.touch-zone:active {
+    opacity: 0.6;
+    background: rgba(255,255,255,0.05);
+}
+
+.touch-left {
+    border-right: 1px solid rgba(255,255,255,0.1);
+}
+
+.touch-icon {
+    font-size: 3em;
+    margin-bottom: 10px;
+}
+
+.touch-label {
+    font-size: 0.9em;
+    font-weight: 700;
+    color: #fff;
+    letter-spacing: 2px;
+}
+
 /* Animations */
 @keyframes pulse {
     0%, 100% { opacity: 1; }
@@ -519,8 +588,32 @@ body {
     .auth-container {
         min-width: 300px;
         padding: 30px;
+        margin: 20px;
     }
     .menu-container .game-title {
         font-size: 2em;
+    }
+    .controls-hint {
+        display: none !important;
+    }
+    .hud-top {
+        font-size: 1em;
+        padding: 10px 15px;
+    }
+    .hud-danger {
+        font-size: 0.85em;
+        padding: 8px 20px;
+    }
+    .touch-icon {
+        font-size: 2.5em;
+    }
+    .touch-label {
+        font-size: 0.8em;
+    }
+}
+
+@media (min-width: 769px) {
+    .mobile-controls {
+        display: none !important;
     }
 }
