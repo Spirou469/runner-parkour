@@ -1,21 +1,20 @@
-// Main Game Engine
+// Main Game Engine - Vector Style
 class Game {
     constructor(canvas) {
         this.canvas = canvas;
         this.ctx = canvas.getContext('2d');
         this.resize();
         
-        // Game state
         this.isRunning = false;
         this.isPaused = false;
         this.isGameOver = false;
         this.level = 'city';
         
-        // Player
         this.player = null;
         this.playerSkin = 'black';
         
-        // World
+        this.monster = null;
+        
         this.camera = { x: 0, y: 0 };
         this.cameraShake = { x: 0, y: 0, intensity: 0, duration: 0 };
         this.groundY = this.canvas.height * GAME_CONFIG.GROUND_Y_RATIO;
@@ -24,26 +23,26 @@ class Game {
         this.coins = 0;
         this.speed = GAME_CONFIG.BASE_SPEED;
         
-        // Obstacles
         this.obstacles = [];
         this.nextObstacleDistance = 200;
         
-        // Background
         this.bgOffset = 0;
         this.bgElements = [];
         this.particles = [];
         this.coinParticles = [];
         
-        // Input
         this.keys = {};
+        this.touchStartY = 0;
+        this.touchStartX = 0;
+        this.isMobile = false;
         this.setupInput();
         
-        // Audio
         this.audio = new AudioSystem();
         
-        // Animation frame
         this.animationId = null;
         this.lastTime = 0;
+        
+        this.vectorStyle = true;
     }
 
     resize() {
@@ -53,6 +52,10 @@ class Game {
         if (this.player) {
             this.player.groundY = this.groundY;
             if (this.player.onGround) this.player.y = this.groundY;
+        }
+        if (this.monster) {
+            this.monster.baseY = this.groundY;
+            this.monster.y = this.groundY;
         }
     }
 
@@ -92,7 +95,83 @@ class Game {
             }
         });
         
+        this.setupTouchControls();
+        
         window.addEventListener('resize', () => this.resize());
+        
+        this.isMobile = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+    }
+
+    setupTouchControls() {
+        const touchJump = document.getElementById('touchJump');
+        const touchSlide = document.getElementById('touchSlide');
+        
+        if (touchJump) {
+            touchJump.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                if (!this.isRunning || this.isGameOver) return;
+                if (this.player.jump()) {
+                    this.audio.playJump();
+                }
+            });
+            
+            touchJump.addEventListener('click', (e) => {
+                e.preventDefault();
+                if (!this.isRunning || this.isGameOver) return;
+                if (this.player.jump()) {
+                    this.audio.playJump();
+                }
+            });
+        }
+        
+        if (touchSlide) {
+            touchSlide.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                if (!this.isRunning || this.isGameOver) return;
+                if (this.player.slide()) {
+                    this.audio.playSlide();
+                }
+            });
+            
+            touchSlide.addEventListener('click', (e) => {
+                e.preventDefault();
+                if (!this.isRunning || this.isGameOver) return;
+                if (this.player.slide()) {
+                    this.audio.playSlide();
+                }
+            });
+        }
+        
+        this.canvas.addEventListener('touchstart', (e) => {
+            this.touchStartY = e.touches[0].clientY;
+            this.touchStartX = e.touches[0].clientX;
+        }, { passive: true });
+        
+        this.canvas.addEventListener('touchend', (e) => {
+            if (!this.isRunning || this.isGameOver) return;
+            
+            const touchEndY = e.changedTouches[0].clientY;
+            const touchEndX = e.changedTouches[0].clientX;
+            const diffY = this.touchStartY - touchEndY;
+            const diffX = touchEndX - this.touchStartX;
+            
+            if (diffY > 50 && Math.abs(diffY) > Math.abs(diffX)) {
+                if (this.player.jump()) {
+                    this.audio.playJump();
+                }
+            }
+            else if (diffY < -50 && Math.abs(diffY) > Math.abs(diffX)) {
+                if (this.player.slide()) {
+                    this.audio.playSlide();
+                }
+            }
+            else if (diffX > 50 && Math.abs(diffX) > Math.abs(diffY)) {
+                this.speed = Math.min(this.speed + 3, GAME_CONFIG.MAX_SPEED);
+                setTimeout(() => {
+                    this.speed = Math.max(this.speed - 3, GAME_CONFIG.BASE_SPEED);
+                }, 500);
+            }
+        }, { passive: true });
     }
 
     start(level = 'city', skin = 'black') {
@@ -100,7 +179,6 @@ class Game {
         this.playerSkin = skin;
         const levelConfig = LEVELS[level];
         
-        // Reset state
         this.isRunning = true;
         this.isGameOver = false;
         this.distance = 0;
@@ -115,22 +193,28 @@ class Game {
         this.coinParticles = [];
         this.cameraShake = { x: 0, y: 0, intensity: 0, duration: 0 };
         
-        // Create player
         const skinData = SKINS.find(s => s.id === skin) || SKINS[0];
-        this.player = new Stickman(150, this.groundY, skinData.color);
+        this.player = new Stickman(200, this.groundY, skinData.color);
         
-        // Generate initial background
+        this.monster = new Monster(-100, this.groundY);
+        
         this.generateBackground();
         
-        // Start audio
         this.audio.startMusic(levelConfig.musicTempo);
         
-        // Show HUD
         document.getElementById('gameHUD').style.display = 'block';
-        document.getElementById('controlsHint').style.display = 'flex';
+        document.getElementById('hudDanger').style.display = 'none';
+        
+        if (this.isMobile) {
+            document.getElementById('mobileControls').style.display = 'flex';
+            document.getElementById('controlsHint').style.display = 'none';
+        } else {
+            document.getElementById('controlsHint').style.display = 'flex';
+            document.getElementById('mobileControls').style.display = 'none';
+        }
+        
         document.getElementById('gameOver').style.display = 'none';
         
-        // Start loop
         this.lastTime = performance.now();
         this.gameLoop(this.lastTime);
     }
@@ -143,15 +227,15 @@ class Game {
         }
         document.getElementById('gameHUD').style.display = 'none';
         document.getElementById('controlsHint').style.display = 'none';
+        document.getElementById('mobileControls').style.display = 'none';
     }
 
-    gameOver() {
+    gameOver(reason = 'collision') {
         this.isRunning = false;
         this.isGameOver = true;
         this.audio.stopMusic();
         this.audio.playGameOver();
         
-        // Show game over screen
         document.getElementById('finalDistance').textContent = Math.floor(this.distance);
         document.getElementById('finalCoins').textContent = this.coins;
         
@@ -161,15 +245,15 @@ class Game {
         
         document.getElementById('gameHUD').style.display = 'none';
         document.getElementById('controlsHint').style.display = 'none';
+        document.getElementById('mobileControls').style.display = 'none';
         
-        // Return coins and distance for saving
         return { coins: this.coins, distance: Math.floor(this.distance) };
     }
 
     gameLoop(currentTime) {
         if (!this.isRunning) return;
         
-        const deltaTime = (currentTime - this.lastTime) / 16.67; // Normalize to ~60fps
+        const deltaTime = (currentTime - this.lastTime) / 16.67;
         this.lastTime = currentTime;
         
         this.update(deltaTime);
@@ -179,28 +263,40 @@ class Game {
     }
 
     update(deltaTime) {
-        // Speed progression
         this.speed += GAME_CONFIG.SPEED_INCREMENT * deltaTime;
         this.speed = Math.min(this.speed, GAME_CONFIG.MAX_SPEED);
         
-        // Distance
         this.distance += (this.speed * deltaTime) / 10;
         this.score = Math.floor(this.distance);
         
-        // Coins based on distance
         const newCoins = Math.floor(this.distance / GAME_CONFIG.COIN_EVERY_METERS);
         if (newCoins > this.coins) {
             this.coins = newCoins;
             this.audio.playCoin();
         }
         
-        // Update player
         this.player.update(deltaTime, this.speed);
         
-        // Camera follow
-        this.camera.x = this.player.x - 150;
+        if (this.monster) {
+            this.monster.update(deltaTime, this.player.x, this.speed, this.player.state);
+            
+            if (this.monster.isCaught()) {
+                this.triggerCameraShake(10, 20);
+                this.gameOver('caught');
+                return;
+            }
+            
+            const distToMonster = this.player.x - this.monster.x;
+            const dangerEl = document.getElementById('hudDanger');
+            if (distToMonster < 150 && dangerEl) {
+                dangerEl.style.display = 'block';
+            } else if (dangerEl) {
+                dangerEl.style.display = 'none';
+            }
+        }
         
-        // Camera shake
+        this.camera.x = this.player.x - this.canvas.width * 0.25;
+        
         if (this.cameraShake.duration > 0) {
             this.cameraShake.duration -= deltaTime;
             this.cameraShake.x = (Math.random() - 0.5) * this.cameraShake.intensity;
@@ -211,22 +307,12 @@ class Game {
             }
         }
         
-        // Background scroll
         this.bgOffset += this.speed * 0.3 * deltaTime;
         
-        // Generate obstacles
         this.generateObstacles();
-        
-        // Update obstacles
         this.updateObstacles(deltaTime);
-        
-        // Update particles
         this.updateParticles(deltaTime);
-        
-        // Update background elements
         this.updateBackground(deltaTime);
-        
-        // Update HUD
         this.updateHUD();
     }
 
@@ -299,12 +385,9 @@ class Game {
         for (let i = this.obstacles.length - 1; i >= 0; i--) {
             const obs = this.obstacles[i];
             
-            // Move obstacle with world
             obs.x -= this.speed * deltaTime;
             
-            // Check collision
             if (!obs.passed && this.checkCollision(playerBox, obs)) {
-                // Check if player can auto-vault medium obstacles
                 if (obs.type === OBSTACLE_TYPES.MEDIUM && this.player.state === 'running') {
                     this.player.vault();
                     this.audio.playVault();
@@ -312,20 +395,16 @@ class Game {
                     continue;
                 }
                 
-                // Check if on platform
                 if (obs.platform && this.player.onGround && 
                     playerBox.x + playerBox.width > obs.x && 
                     playerBox.x < obs.x + obs.width &&
                     Math.abs(playerBox.y + playerBox.height - obs.y) < 10) {
-                    // Player is on platform
                     this.player.groundY = obs.y;
                     this.player.y = obs.y;
                     this.player.onGround = true;
                     this.player.vy = 0;
                     
-                    // Check if player moved past platform
                     if (playerBox.x > obs.x + obs.width) {
-                        // Fall off platform - auto roll
                         this.player.groundY = this.groundY;
                         this.player.fallFromPlatform();
                         this.triggerCameraShake();
@@ -333,7 +412,6 @@ class Game {
                     continue;
                 }
                 
-                // Gap - check if player fell in
                 if (obs.isGap) {
                     if (playerBox.x > obs.x && playerBox.x < obs.x + obs.width && this.player.onGround) {
                         this.player.onGround = false;
@@ -346,7 +424,6 @@ class Game {
                     continue;
                 }
                 
-                // Actual collision - game over
                 if (!obs.isGap && !obs.platform) {
                     this.triggerCameraShake(6, 15);
                     this.gameOver();
@@ -354,18 +431,15 @@ class Game {
                 }
             }
             
-            // Mark as passed
             if (!obs.passed && obs.x + obs.width < playerBox.x) {
                 obs.passed = true;
             }
             
-            // Remove off-screen obstacles
             if (obs.x + obs.width < this.camera.x - 100) {
                 this.obstacles.splice(i, 1);
             }
         }
         
-        // Reset ground if player fell from platform and landed
         if (this.player.onGround && this.player.groundY !== this.groundY && 
             this.player.state === 'running') {
             this.player.groundY = this.groundY;
@@ -389,7 +463,6 @@ class Game {
     }
 
     updateParticles(deltaTime) {
-        // Speed lines
         if (this.speed > GAME_CONFIG.BASE_SPEED * 1.5) {
             for (let i = 0; i < 2; i++) {
                 this.particles.push({
@@ -405,7 +478,6 @@ class Game {
             }
         }
         
-        // Update existing particles
         for (let i = this.particles.length - 1; i >= 0; i--) {
             const p = this.particles[i];
             p.x += p.vx * deltaTime;
@@ -416,7 +488,6 @@ class Game {
             }
         }
         
-        // Coin particles
         for (let i = this.coinParticles.length - 1; i >= 0; i--) {
             const p = this.coinParticles[i];
             p.x += p.vx * deltaTime;
@@ -476,10 +547,8 @@ class Game {
         const h = this.canvas.height;
         const level = LEVELS[this.level];
         
-        // Clear
         ctx.clearRect(0, 0, w, h);
         
-        // Sky gradient
         const gradient = ctx.createLinearGradient(0, 0, 0, h);
         level.skyGradient.forEach((color, i) => {
             gradient.addColorStop(i / (level.skyGradient.length - 1), color);
@@ -487,14 +556,11 @@ class Game {
         ctx.fillStyle = gradient;
         ctx.fillRect(0, 0, w, h);
         
-        // Background elements (parallax)
         this.drawBackground(ctx, level);
         
-        // Ground
         ctx.fillStyle = level.groundColor;
         ctx.fillRect(0, this.groundY, w, h - this.groundY);
         
-        // Ground line glow
         ctx.strokeStyle = level.accentColor;
         ctx.lineWidth = 2;
         ctx.globalAlpha = 0.5;
@@ -504,17 +570,16 @@ class Game {
         ctx.stroke();
         ctx.globalAlpha = 1;
         
-        // Speed lines
         this.drawSpeedLines(ctx);
-        
-        // Obstacles
         this.drawObstacles(ctx, level);
         
-        // Player
-        this.player.draw(ctx, this.cameraShake);
+        if (this.monster) {
+            this.monster.draw(ctx, this.cameraShake);
+        }
         
-        // Coin particles
+        this.player.draw(ctx, this.cameraShake);
         this.drawCoinParticles(ctx);
+        this.drawVignette(ctx, w, h);
     }
 
     drawBackground(ctx, level) {
@@ -636,5 +701,13 @@ class Game {
             ctx.stroke();
         });
         ctx.restore();
+    }
+
+    drawVignette(ctx, w, h) {
+        const gradient = ctx.createRadialGradient(w/2, h/2, w * 0.3, w/2, h/2, w * 0.8);
+        gradient.addColorStop(0, 'rgba(0,0,0,0)');
+        gradient.addColorStop(1, 'rgba(0,0,0,0.4)');
+        ctx.fillStyle = gradient;
+        ctx.fillRect(0, 0, w, h);
     }
 }
