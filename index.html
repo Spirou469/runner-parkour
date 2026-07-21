@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>Runner Parkour - Vector Style</title>
     <link rel="stylesheet" href="styles.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -14,7 +14,7 @@
     <div id="authScreen" class="screen active">
         <div class="auth-container">
             <h1 class="game-title">🏃 RUNNER PARKOUR</h1>
-            <p class="subtitle">Parkour Vector Style</p>
+            <p class="subtitle">Vector Style Parkour</p>
             
             <div id="loginForm">
                 <h2>Connexion</h2>
@@ -105,6 +105,9 @@
             <span id="hudCoins">💰 0</span>
             <span id="hudSpeed">Speed: 1.0x</span>
         </div>
+        <div class="hud-danger" id="hudDanger" style="display:none;">
+            ⚠️ LE MONSTRE SE RAPPROCHE !
+        </div>
     </div>
     
     <!-- Game Over -->
@@ -125,12 +128,25 @@
     <div id="controlsHint" class="controls-hint" style="display:none;">
         <div class="control-key"><span>↑</span> ou <span>Espace</span> = Sauter</div>
         <div class="control-key"><span>↓</span> = Glisser</div>
-        <div class="control-key"><span>→</span> = Sprint (temporaire)</div>
+        <div class="control-key"><span>→</span> = Sprint</div>
+    </div>
+    
+    <!-- Mobile Touch Controls -->
+    <div id="mobileControls" class="mobile-controls" style="display:none;">
+        <div class="touch-zone touch-left" id="touchJump">
+            <div class="touch-icon">⬆️</div>
+            <div class="touch-label">SAUTER</div>
+        </div>
+        <div class="touch-zone touch-right" id="touchSlide">
+            <div class="touch-icon">⬇️</div>
+            <div class="touch-label">GLISSER</div>
+        </div>
     </div>
 
     <script src="config.js"></script>
     <script src="audio.js"></script>
     <script src="stickman.js"></script>
+    <script src="monster.js"></script>
     <script src="game.js"></script>
     <script src="auth.js"></script>
     <script src="main.js"></script>
